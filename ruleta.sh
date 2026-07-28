@@ -12,7 +12,7 @@ grayColour="\e[0;37m\033[1m"
 
 function ctrl_c(){
   echo -e "\n\n${redColour}[!] Saliendo...${endColour}\n"
-  exit 1
+  tput cnorm; exit 1
 }
 
 #Ctrl + C
@@ -27,14 +27,40 @@ function helpPanel(){
 }
 
 function martingala(){
-  echo -e "\n[+] Vamos a jugar con la tecnica martingala\n"
+  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Dinero actual: ${endColour}${yellowColour}$money${endColour}"
+  echo -ne "${yellowColour}[+]${endColour}${grayColour} Cuanto dinero tienes pensado apostar? -> ${endColour}" && read initial_bet
+  echo -ne "${yellowColour}[+]${endColour}${grayColour} A que deseas apostar continueamente? -> ${endColour}" && read par_impar
+
+  echo -e "\dn${yellowColour}[+]${endColour}${grayColour} Vamos a jugar con una cantidad inicial de ${endColour}${yellowColour} $initial_bet ${endColour}${grayColour} a${endColour}${yellowColour} $par_impar${endColour}"
+  
+  tput civis
+  while true; do
+    random_number="$(($RANDOM % 37))"
+    echo -e "\n${yellowColour}[+]${endColour}${grayColour} Ha salido el numero ${endColour}${blueColour}$random_number${endColour}"
+
+    if [ "$(($random_number % 2))" -eq 0 ]; then
+      if [ "$random_number" -eq 0 ]; then
+        echo "[+] Ha salido el 0, por tanto perdemos"
+      else
+        echo "[+] el numero que ha salido es par"
+      fi
+    else
+      echo "[+] el numero que salio es impar"
+    fi
+
+    sleep 0.4
+  done
+
+  tput cnorm
+
+
 }
 
 while getopts "m:t:h" arg; do
   case $arg in 
     m) money=$OPTARG;;
     t) techniqute=$OPTARG;;
-    w) helpPanel;;
+    h) helpPanel;;
   esac
 
 done
