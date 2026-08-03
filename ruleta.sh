@@ -26,16 +26,19 @@ function helpPanel(){
   exit 1
 }
 
+#---Comienzo de la funcion martingala---#
+
+
 function martingala(){
   echo -e "\n${yellowColour}[+]${endColour}${grayColour} Dinero actual: ${endColour}${yellowColour}$money${endColour}"
   echo -ne "${yellowColour}[+]${endColour}${grayColour} Cuanto dinero tienes pensado apostar? -> ${endColour}" && read initial_bet
-  echo -ne "${yellowColour}[+]${endColour}${grayColour} A que deseas apostar continueamente? -> ${endColour}" && read par_impar
+  echo -ne "${yellowColour}[+]${endColour}${grayColour} A que deseas apostar continueamente? (par/impar) -> ${endColour}" && read par_impar
 
   echo -e "\n${yellowColour}[+]${endColour}${grayColour} Vamos a jugar con una cantidad inicial de ${endColour}${yellowColour} $initial_bet ${endColour}${grayColour} a${endColour}${yellowColour} $par_impar${endColour}\n"
  
   backup_bet=$initial_bet
-  play_counter=1
-  jugadas_malas="["
+  play_counter=0
+  jugadas_malas="[ "
   money_max=0
   tput civis
   while true; do
@@ -47,8 +50,9 @@ function martingala(){
     random_number="$(($RANDOM % 37))" 
 #    echo -e "${yellowColour}[+]${endColour}${grayColour} Ha salido el numero ${endColour}${blueColour}$random_number${endColour}"
     
-    if [ ! "$money" -le 0 ]; then
-      if [ "$par_impar" == "par" ]; then 
+    if [ ! "$money" -lt 0 ]; then
+      if [ "$par_impar" == "par" ]; then
+        #Todo esta definicion es para cuando apostamos por numeros pares
         if [ "$(($random_number % 2))" -eq 0 ]; then
           if [ "$random_number" -eq 0 ]; then
 #           echo -e "${redColour}[+] Ha salido el 0, por tanto perdemos${endColour}"
@@ -62,7 +66,7 @@ function martingala(){
             money=$(($money + $reward))
 #            echo -e "${yellowColour}[+]${endColour}${grayColour} Tienes${endColour}${yellowColour} $money${endColour}"
             initial_bet=$backup_bet
-            jugadas_malas=""
+            jugadas_malas="[ "
           fi
         else
 #          echo -e "${yellowColour}[+]${endColour}${redColour} el numero que salio es impar${endColour}"
@@ -70,14 +74,25 @@ function martingala(){
           jugadas_malas+="$random_number "
 #          echo -e "${yellowColour}[+]${endColour}${grayColour} Ahora mismo te quedas en${endColour}${yellowColour} $money${endColour}"
         fi
-
-       # sleep 2.5
+      else
+      #Toda esta definicion espara cuando apostamos por numeros impares   
+        if [ "$(($random_number % 2))" -eq 1 ]; then
+         #echo -e "${yellowColour}[+]${endColour}${greenColour}El numero que ha salido es impar, !ganas!${endColour}"
+         reward=$(($initial_bet*2))
+         money=$(($money+$reward))
+         initial_bet=$backup_bet
+         jugadas_malas="[ "
+        else
+          initial_bet=$(($initial_bet*2))
+          jugadas_malas+="$random_number "
+ #        echo -e "${yellowColour}[+]${endColour}${grayColour} Ahora mismo te quedas en${endColour}${yellowColour} $money${endColour}"
+        fi
       fi
     else
        echo -e "${redColour}[!] Te has quedado sin dinero${endColour}\n"
        echo -e "${yellowColour}[+]${endColour}${grayColour} Han habido un total de${endColour}${yellowColour} $play_counter${endColour}${grayColour} jugadas${endColour}\n"
        echo -e "${yellowColour}[+]${endColour}${grayColour} A Continuacion se van a representar las malas jugadas consecutivas que han salido:${endColour}\n"
-       echo -e "${blueColour}$jugadas_malas${endColour}\n"
+       echo -e "${blueColour}$jugadas_malas]${endColour}\n"
        echo -e "${greenColour}Maximo dinero conseguido: $money_max$ ${endColour}"
        tput cnorm; exit 0
     fi
@@ -86,22 +101,36 @@ function martingala(){
   done
 
   tput cnorm
+}
+
+
+#---Fin de la funcion martingala---#
+
+
+#---Comiezo de la funcion inverseLabrouchere
+
+function inverseLabrouchere(){
+  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Dinero actual: ${endColour}${yellowColour}$money${endColour}"
+  echo -ne "${yellowColour}[+]${endColour}${grayColour} A que deseas apostar continueamente? (par/impar) -> ${endColour}" && read par_impar
 
 
 }
 
+
 while getopts "m:t:h" arg; do
   case $arg in 
     m) money=$OPTARG;;
-    t) techniqute=$OPTARG;;
+    t) technique=$OPTARG;;
     h) helpPanel;;
   esac
 
 done
 
-if [ $money ] && [ $techniqute ]; then
-  if [ "$techniqute" == "martingala" ]; then
+if [ $money ] && [ $technique ]; then
+  if [ "$technique" == "martingala" ]; then
     martingala
+  elif [ "$technique" == "inverseLabrouchere" ]; then
+    inverseLabrouchere
   else
     echo -e "\n${redColour}[!] La tecnica introducida no existe${endColour}"
     helpPanel
