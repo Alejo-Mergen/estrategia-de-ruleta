@@ -112,10 +112,56 @@ function martingala(){
 function inverseLabrouchere(){
   echo -e "\n${yellowColour}[+]${endColour}${grayColour} Dinero actual: ${endColour}${yellowColour}$money${endColour}"
   echo -ne "${yellowColour}[+]${endColour}${grayColour} A que deseas apostar continueamente? (par/impar) -> ${endColour}" && read par_impar
+  
+  declare -a my_sequence=(1 2 3 4)
 
+  echo -e "${yellowColour}[+]${endColour}${grayColour} Comenzar con la secuencia ${endColour}${greenColour}[${my_sequence[@]}]${endColour}\n"
+ 
+  bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+
+  #echo -e "${yellowColour}[+]${endColour}${grayColour}Invertimos${endColour}${yellowColour} $bet${endColour}\n"
+  #echo -e "${yellowColour}[+]${endColour}${grayColour} Tenemos${endColour}${yellowColour} $money${endColour}"
+
+
+  tput civis
+  while true; do
+    random_number=$(($RANDOM % 37))
+    money=$(($money - $bet))
+
+    echo -e "${yellowColour}[+]${endColour}${grayColour}Invertimos${endColour}${yellowColour} $bet${endColour}\n"
+    echo -e "${yellowColour}[+]${endColour}${grayColour} Tenemos${endColour}${yellowColour} $money${endColour}"
+    echo -e "${yellowColour}[+]${endColour}${grayColour} Ha salido el numero ${endColour}${blueColour}$random_number${endColour}"
+    
+    if [ "$par_impar" == "par" ]; then
+      if [ "$(($random_number % 2))" -eq 0 ] && [ "$random_number" -ne 0 ]; then
+        echo -e "${yellowColour}[+]${endColour}${grayColour} el numero es par${endColour}"
+        reward=$(($bet*2))
+        let money+=$reward
+        echo -e "${yellowColour}[+]${endColour}${grayColour}Tienes ${endColour}${yellowColour}$money${endColour}"
+
+        my_sequence+=($bet)
+        my_sequence=(${my_sequence[@]})
+ 
+        echo -e "${yellowColour}[+]${endColour}${grayColour}Nuestra nueva secuencia es ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
+        if [ "${#my_sequence[@]}" -ne 1 ]; then 
+          bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+        elif [ "${#my_sequence[@]}" -eq 1 ]; then
+          bet=${my_sequence[0]}
+        fi
+      elif [ "$random_number" -eq 0 ]; then
+        echo -e "${redColour}[!] el numero es 0${endColour}"
+      else
+        echo -e "${redColour}[!] el numero es impar ${endColour}"
+      fi
+    fi
+
+    sleep 5
+  done
+  tput cnorm
 
 }
 
+#---Final de la funcion inverseLabrouchere
 
 while getopts "m:t:h" arg; do
   case $arg in 
