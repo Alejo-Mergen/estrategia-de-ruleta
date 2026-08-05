@@ -46,38 +46,28 @@ function martingala(){
     if [ "$money" -gt "$money_max" ]; then
       money_max=$money
     fi
-#    echo -e "\n${yellowColour}[+]${endColour}${grayColour} Acabas de apostar${endColour}${yellowColour} $initial_bet${endColour}${grayColour} y tienes${endColour}${yellowColour} $money ${endColour}"
     random_number="$(($RANDOM % 37))" 
-#    echo -e "${yellowColour}[+]${endColour}${grayColour} Ha salido el numero ${endColour}${blueColour}$random_number${endColour}"
     
     if [ ! "$money" -lt 0 ]; then
       if [ "$par_impar" == "par" ]; then
         #Todo esta definicion es para cuando apostamos por numeros pares
         if [ "$(($random_number % 2))" -eq 0 ]; then
           if [ "$random_number" -eq 0 ]; then
-#           echo -e "${redColour}[+] Ha salido el 0, por tanto perdemos${endColour}"
-#            echo -e "${yellowColour}[+]${endColour}${redColour} el numero que salio es impar${endColour}"
             initial_bet=$(($initial_bet*2))
             jugadas_malas+="$random_number "
           else
-#            echo -e "${yellowColour}[+]${endColour}${greenColour} el numero que ha salido es par, ganas!${endColour}"
             reward=$(($initial_bet * 2))
-#            echo -e "${yellowColour}[+]${endColour}${grayColour} Ganas un total de${endColour}${yellowColour} $reward${endColour}"
             money=$(($money + $reward))
-#            echo -e "${yellowColour}[+]${endColour}${grayColour} Tienes${endColour}${yellowColour} $money${endColour}"
             initial_bet=$backup_bet
             jugadas_malas="[ "
           fi
         else
-#          echo -e "${yellowColour}[+]${endColour}${redColour} el numero que salio es impar${endColour}"
           initial_bet=$(($initial_bet*2))
           jugadas_malas+="$random_number "
-#          echo -e "${yellowColour}[+]${endColour}${grayColour} Ahora mismo te quedas en${endColour}${yellowColour} $money${endColour}"
         fi
       else
       #Toda esta definicion espara cuando apostamos por numeros impares   
         if [ "$(($random_number % 2))" -eq 1 ]; then
-         #echo -e "${yellowColour}[+]${endColour}${greenColour}El numero que ha salido es impar, !ganas!${endColour}"
          reward=$(($initial_bet*2))
          money=$(($money+$reward))
          initial_bet=$backup_bet
@@ -85,7 +75,6 @@ function martingala(){
         else
           initial_bet=$(($initial_bet*2))
           jugadas_malas+="$random_number "
- #        echo -e "${yellowColour}[+]${endColour}${grayColour} Ahora mismo te quedas en${endColour}${yellowColour} $money${endColour}"
         fi
       fi
     else
@@ -119,15 +108,25 @@ function inverseLabrouchere(){
  
   bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
 
-  #echo -e "${yellowColour}[+]${endColour}${grayColour}Invertimos${endColour}${yellowColour} $bet${endColour}\n"
-  #echo -e "${yellowColour}[+]${endColour}${grayColour} Tenemos${endColour}${yellowColour} $money${endColour}"
-
-
+  jugadas_totales=0
+  bet_to_renew=$(($money+50)) # Dinero de renovacion de secuencia (1 2 3 4)
+ 
+  echo -e "${yellowColour}[+]${endColour}${grayColour} El tope a renovar la secuencia esta establecido por encima de los  ${endColour}${yellowColour}$bet_to_renew${endColour}"
+  
   tput civis
   while true; do
+    let jugadas_totales+=1
     random_number=$(($RANDOM % 37))
     money=$(($money - $bet))
     if [ ! "$money" -lt 0 ]; then
+      if [ $money -gt $bet_to_renew ]; then
+        echo -e "${yellowColour}[+]${endColour}${grayColour} Nuestro dinero ha superado el tope de ${endColour}${yellowColour}$bet_to_renew${endColour}${grayColour} es tablecidos para renovar nuestras secuencia${endColour}"
+        bet_to_renew=$((bet_to_renew + 50))
+        echo -e "${yellowColour}[+]${endColour}${grayColour} El tope establecido en${endColour}${yellowColour} $bet_to_renew${$endColour}"
+        my_sequence=(1 2 3 4)
+        bet=$((${my_sequence[0]} + ${my_sequence[-1]}))1
+        echo -e "${yellowColour}[+]${endColour}${grayColour} La secuencia ha sido restablecida a:${endColour}${greenColour} ${my_sequence[@]}${endColour}"
+      fi
       echo -e "${yellowColour}[+]${endColour}${grayColour}Invertimos${endColour}${yellowColour} $bet${endColour}\n"
       echo -e "${yellowColour}[+]${endColour}${grayColour} Tenemos${endColour}${yellowColour} $money${endColour}"
       echo -e "${yellowColour}[+]${endColour}${grayColour} Ha salido el numero ${endColour}${blueColour}$random_number${endColour}"
@@ -139,20 +138,44 @@ function inverseLabrouchere(){
           let money+=$reward
           echo -e "${yellowColour}[+]${endColour}${grayColour}Tienes ${endColour}${yellowColour}$money${endColour}"
 
-          my_sequence+=($bet)
-          my_sequence=(${my_sequence[@]})
-   
-          echo -e "${yellowColour}[+]${endColour}${grayColour}Nuestra nueva secuencia es ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
-          if [ "${#my_sequence[@]}" -ne 1 ] && [ "${#my_sequence[@]}" -ne 0 ]; then 
-            bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
-          elif [ "${#my_sequence[@]}" -eq 1 ]; then
-            bet=${my_sequence[0]}
-          else
-            echo -e "${redColour}[!] Hemos perdido nuestra secuencia${endColour}"
-            my_sequence=(1 2 3 4)
-            echo -e "${yellowColour}[+]${endColour}${grayColour} Restablecemos la secuencia a ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
-            bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
-          fi
+           if [ $money -gt $bet_to_renew ]; then
+             echo -e "${yellowColour}[+]${endColour}${grayColour} Nuestro dinero ha superado el tope de ${endColour}${yellowColour}$bet_to_renew${endColour}${grayColour} es tablecidos para renovar nuestras secuencia${endColour}"
+             bet_to_renew=$((bet_to_renew + 50))
+             echo -e "${yellowColour}[+]${endColour}${grayColour} El tope establecido en${endColour}${yellowColour} $bet_to_renew${endColour}"
+             my_sequence=(1 2 3 4)
+             bet=$((${my_sequence[0]} + ${my_sequence[-1]}))1
+             echo -e "${yellowColour}[+]${endColour}${grayColour} La secuencia ha sido restablecida a:${endColour}${greenColour} [${my_sequence[@]}]${endColour}"
+           elif [ $money -lt $(($bet_to_renew-100)) ]; then
+             echo -e "${yellowColour}[+]${endColour}${grayColour} Hemos llegado a un minimo critico, se procede a reajustar el tope${endColour}"
+             bet_to_renew=$(($bet_to_renew - 50))
+             echo -e "${yellowColour}[+]${endColour}${grayColour} El tope ha sido renovado a ${endColour}${yellowColour}$bet_to_renew${endColour}"
+             if [ "${#my_sequence[@]}" -ne 1 ] && [ "${#my_sequence[@]}" -ne 0 ]; then 
+               bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+             elif [ "${#my_sequence[@]}" -eq 1 ]; then
+               bet=${my_sequence[0]}
+             else
+               echo -e "${redColour}[!] Hemos perdido nuestra secuencia${endColour}"
+               my_sequence=(1 2 3 4)
+               echo -e "${yellowColour}[+]${endColour}${grayColour} Restablecemos la secuencia a ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
+               bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+             fi
+
+           else
+             my_sequence+=($bet)
+             my_sequence=(${my_sequence[@]})
+       
+             echo -e "${yellowColour}[+]${endColour}${grayColour}Nuestra nueva secuencia es ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
+             if [ "${#my_sequence[@]}" -ne 1 ] && [ "${#my_sequence[@]}" -ne 0 ]; then 
+               bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+             elif [ "${#my_sequence[@]}" -eq 1 ]; then
+               bet=${my_sequence[0]}
+             else
+               echo -e "${redColour}[!] Hemos perdido nuestra secuencia${endColour}"
+               my_sequence=(1 2 3 4)
+               echo -e "${yellowColour}[+]${endColour}${grayColour} Restablecemos la secuencia a ${endColour}${greenColour}[${my_sequence[@]}]${endColour}"
+               bet=$((${my_sequence[0]} + ${my_sequence[-1]}))
+            fi
+        fi
         elif [ "$((random_number % 2))" -eq 1 ] || [ "$random_number" -eq 0 ]; then
           if [ "$((random_number % 2))" -eq 1 ]; then
             echo -e "${redColour}[!] el numero es impar ${endColour}"
@@ -178,10 +201,10 @@ function inverseLabrouchere(){
         fi
       fi
      else
-       
+      
 
-       echo -e "${redColour}[!] Te has quedado sin dinero${endColour}\n"
-      # echo -e "${yellowColour}[+]${endColour}${grayColour} Han habido un total de${endColour}${yellowColour} $play_counter${endColour}${grayColour} jugadas${endColour}\n"
+       echo -e "\n${redColour}[!] Te has quedado sin dinero${endColour}"
+       echo -e "${yellowColour}[+]${endColour}${grayColour} En total han habido ${endColour}${yellowColour}$jugadas_totales${endColour}${grayColour} jugadas totales\n${endColour}"
       tput cnorm; exit 1
      fi
     #sleep 1
